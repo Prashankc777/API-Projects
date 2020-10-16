@@ -4,11 +4,10 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ParkyApi.Models
+namespace ParkyApi.Models.DTO
 {
-    public class NationalPark
+    public class NationalPArkDTO
     {
-        [Key]
         public int Id { get; set; }
         [Required]
         public string Name { get; set; }
@@ -16,8 +15,6 @@ namespace ParkyApi.Models
         public string State { get; set; }
         public DateTime Created { get; set; }
         public byte[] Picture { get; set; }
-        public DateTime Established { get; set; } 
-
-
+        public DateTime Established { get; set; }
     }
 }
