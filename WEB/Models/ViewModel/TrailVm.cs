@@ -9,8 +9,6 @@ namespace WEB.Models.ViewModel
 {
     public class TrailVm
     {
-        
-
         public IEnumerable<SelectListItem> NationaParkList { get; set; }
 
         public Trail Trail { get; set; }

@@ -6,22 +6,34 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using ParkyWeb;
+using WEB.IRepositorys;
 using WEB.Models;
+using WEB.Models.ViewModel;
 
 namespace WEB.Controllers
 {
     public class HomeController : Controller
     {
+        public ITrailRepository TrailRepository;
         private readonly ILogger<HomeController> _logger;
+        private readonly INationalRepository _nationalRepository;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, INationalRepository nationalRepository, ITrailRepository trailRepository)
         {
+            TrailRepository = trailRepository;
             _logger = logger;
+            _nationalRepository = nationalRepository;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var listOfAll = new Index_VM()
+            {
+                NationalParkList = await _nationalRepository.GetAllAsync(SD.NationalParkAPIPath),
+                Trails = await TrailRepository.GetAllAsync(SD.TrailAPIPath)
+            };
+            return View(listOfAll);
         }
 
         public IActionResult Privacy()
@@ -35,7 +47,7 @@ namespace WEB.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-       
+
 
     }
 }

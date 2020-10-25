@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Policy;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ParkyApi.Models;
@@ -28,8 +29,8 @@ namespace ParkyApi.Controllers
         public NationalParksV2Controller(INationalRepository nationalRepository, IMapper mapper)
 
         {
-            this._nationalRepository = nationalRepository;
-            this._mapper = mapper;   
+            _nationalRepository = nationalRepository;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -38,16 +39,16 @@ namespace ParkyApi.Controllers
         /// <returns></returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NationalPark>))]
-       
+
         public IActionResult GetNationalPark()
         {
             var obList = _nationalRepository.GetNationalParks();
             var objDtp = new List<NationalPArkDTO>();
-             
+
             foreach (var obj in obList)
             {
                 objDtp.Add(_mapper.Map<NationalPArkDTO>(obj));
-                 
+
             }
             return Ok(objDtp);
 
@@ -60,7 +61,7 @@ namespace ParkyApi.Controllers
 
         [HttpGet("{nationalPark:int}", Name = "NationalPark")]
         [ProducesResponseType(200, Type = typeof(NationalPArkDTO))]
-       
+        [Authorize]
         [ProducesResponseType(404)]
         [ProducesDefaultResponseType]
         public IActionResult GetNationalPark(int nationalPark)
@@ -83,7 +84,7 @@ namespace ParkyApi.Controllers
             if (nationalPArkDto is null) return BadRequest(ModelState);
             if (_nationalRepository.NationalParkExist(nationalPArkDto.Name))
             {
-                ModelState.AddModelError("","Already exist");
+                ModelState.AddModelError("", "Already exist");
                 return StatusCode(404, ModelState);
             }
 
@@ -96,7 +97,7 @@ namespace ParkyApi.Controllers
                 return StatusCode(500, ModelState);
             }
 
-            return CreatedAtRoute("NationalPark", new { Version = HttpContext.GetRequestedApiVersion().ToString(), nationalPark = nationalParkobj.Id}, nationalParkobj);
+            return CreatedAtRoute("NationalPark", new { Version = HttpContext.GetRequestedApiVersion().ToString(), nationalPark = nationalParkobj.Id }, nationalParkobj);
 
 
         }
@@ -122,8 +123,8 @@ namespace ParkyApi.Controllers
 
         }
 
-        
-       
+
+
         [HttpDelete("{nationalParkId:int}", Name = "DeeleteNationalPark")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -140,13 +141,13 @@ namespace ParkyApi.Controllers
             var nationalparkObj = _nationalRepository.GetNationalPark(nationalParkId);
             if (!_nationalRepository.DeleteNationalPark(nationalparkObj))
             {
-                ModelState.AddModelError("","something went wrong");
+                ModelState.AddModelError("", "something went wrong");
                 return StatusCode(500, ModelState);
             }
 
             return NoContent();
 
-         }
+        }
 
 
     }
