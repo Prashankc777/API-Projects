@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -16,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ParkyApi.Data;
 using ParkyApi.Mapper;
@@ -34,27 +37,55 @@ namespace ParkyApi
         }
 
         public IConfiguration Configuration { get; }
-         
+
         public void ConfigureServices(IServiceCollection services)
-        { 
+        {
             services.AddDbContext<ApplicationDbContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddControllers();
 
             services.AddScoped<INationalRepository, NationalRepository>();
             services.AddScoped<IParkyRepository, TrailRepository>();
+            services.AddScoped<IUSer, USerRepository>();
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             services.AddSwaggerGen();
             services.AddVersionedApiExplorer(options => options.GroupNameFormat = "'v'VVV");
-           
+
             services.AddAutoMapper(typeof(ParkyMappings));
-          
+
             services.AddApiVersioning(options =>
             {
                 options.AssumeDefaultVersionWhenUnspecified = true;
-                options.DefaultApiVersion = new ApiVersion(1,0); // default verison 1 banako
+                options.DefaultApiVersion = new ApiVersion(1, 0); // default verison 1 banako
                 options.ReportApiVersions = true;
             });
+            var appSettingsSection = Configuration.GetSection("AppSettings");
+
+            services.Configure<AppSettings>(appSettingsSection);
+
+            var appSetting = appSettingsSection.Get<AppSettings>();
+            var key = Encoding.ASCII.GetBytes(appSetting.Secret);
+
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
+            });
+
+
+
+
 
             //services.AddSwaggerGen(options =>
             //{
@@ -99,7 +130,7 @@ namespace ParkyApi
             //    var cmlCommentFile = Path.Combine(AppContext.BaseDirectory, xmlCommentFile);
             //    options.IncludeXmlComments(cmlCommentFile);
             //});
-           
+
 
         }
 
@@ -128,8 +159,12 @@ namespace ParkyApi
 
 
             app.UseRouting();
+            app.UseCors(x => x
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader()); 
 
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
