@@ -20,6 +20,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ParkyAPI;
 using ParkyApi.Data;
 using ParkyApi.Mapper;
 using ParkyApi.Repository;
@@ -40,6 +41,7 @@ namespace ParkyApi
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
             services.AddDbContext<ApplicationDbContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddControllers();
@@ -59,12 +61,12 @@ namespace ParkyApi
                 options.DefaultApiVersion = new ApiVersion(1, 0); // default verison 1 banako
                 options.ReportApiVersions = true;
             });
-            var appSettingsSection = Configuration.GetSection("AppSettings");
 
+            var appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
 
-            var appSetting = appSettingsSection.Get<AppSettings>();
-            var key = Encoding.ASCII.GetBytes(appSetting.Secret);
+            var appSettings = appSettingsSection.Get<AppSettings>();
+            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
 
             services.AddAuthentication(x =>
             {
@@ -162,9 +164,8 @@ namespace ParkyApi
             app.UseCors(x => x
                 .AllowAnyOrigin()
                 .AllowAnyMethod()
-                .AllowAnyHeader()); 
-
-            app.UseAuthentication();
+                .AllowAnyHeader());
+            app.UseAuthentication(); //do this before authorization
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
