@@ -34,7 +34,7 @@ namespace ParkyApi.Repository
             return _db.NationalParks.Any(a => a.Id == id);
         }
 
-        public bool CreateNationalPark(NationalPark NationalPark)
+        public bool CreateNationalPark(NationalPark NationalPark) 
         {
             _db.NationalParks.Add(NationalPark);
             return Save();

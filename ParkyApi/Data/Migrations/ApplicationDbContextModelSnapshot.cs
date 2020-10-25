@@ -47,6 +47,49 @@ namespace ParkyApi.Migrations
 
                     b.ToTable("NationalParks");
                 });
+
+            modelBuilder.Entity("ParkyApi.Models.Trail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Distance")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Elevation")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NationalParkId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NationalParkId");
+
+                    b.ToTable("Trails");
+                });
+
+            modelBuilder.Entity("ParkyApi.Models.Trail", b =>
+                {
+                    b.HasOne("ParkyApi.Models.NationalPark", "NationalPark")
+                        .WithMany()
+                        .HasForeignKey("NationalParkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
 #pragma warning restore 612, 618
         }
     }

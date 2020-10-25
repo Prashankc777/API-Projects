@@ -12,15 +12,18 @@ using ParkyApi.Repository;
 
 namespace ParkyApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/nationalparks")]
+    [ApiVersion("2.0")]
     [ApiController]
+    //[ApiExplorerSettings(GroupName = "parkyOpenAPISpecNP")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public class NationalParksController : Controller
     {
         private readonly INationalRepository _nationalRepository;
         private readonly IMapper _mapper;
 
 
-#pragma warning disable 1591
+
         public NationalParksController(INationalRepository nationalRepository, IMapper mapper)
 
         {
@@ -33,96 +36,15 @@ namespace ParkyApi.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NationalPark>))]
+       
         public IActionResult GetNationalPark()
         {
-            var obList = _nationalRepository.GetNationalParks();
-            var objDtp = new List<NationalPArkDTO>();
-             
-            foreach (var obj in obList)
-            {
-                objDtp.Add(_mapper.Map<NationalPArkDTO>(obj));
-                
-            }
-            return Ok(objDtp);
+            var obList = _nationalRepository.GetNationalParks().FirstOrDefault();
+            return Ok(obList);
 
         }
-        /// <summary>
-        /// Get individual park
-        /// </summary>
-        /// <param name="nationalPark">tyhe id of national park</param>
-        /// <returns></returns>
-
-        [HttpGet("{nationalPark:int}", Name = "NationalPark")]
-        public IActionResult GetNationalPark(int nationalPark)
-        {
-            var obj = _nationalRepository.GetNationalPark(nationalPark);
-            if (obj is null) return NotFound();
-            var ObjDto = _mapper.Map<NationalPArkDTO>(obj);
-            return Ok(ObjDto);
-
-        }
-
-        [HttpPost]
-        public IActionResult CreateNationalPark([FromBody] NationalPArkDTO nationalPArkDto)
-        {
-            if (nationalPArkDto is null) return BadRequest(ModelState);
-            if (_nationalRepository.NationalParkExist(nationalPArkDto.Name))
-            {
-                ModelState.AddModelError("","Already exist");
-                return StatusCode(404, ModelState);
-            }
-
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var nationalParkobj = _mapper.Map<NationalPark>(nationalPArkDto);
-            if (!_nationalRepository.CreateNationalPark(nationalParkobj))
-            {
-                ModelState.AddModelError("", $"{nationalParkobj.Name} cannot be saved");
-                return StatusCode(500, ModelState);
-            }
-
-            return CreatedAtRoute("NationalPark", new { nationalPark = nationalParkobj.Id}, nationalParkobj);
-
-
-        }
-
-
-        [HttpPatch("{nationalPark:int}", Name = "UpdateNationalPark")]
-        public IActionResult UpdateNationalPark(int nationalPark, [FromBody] NationalPArkDTO nationalPArkDto)
-        {
-            if (nationalPArkDto is null || nationalPark != nationalPArkDto.Id) return BadRequest(ModelState);
-            var nationalParkobj = _mapper.Map<NationalPark>(nationalPArkDto);
-            if (!_nationalRepository.UpdateNationalPark(nationalParkobj))
-            {
-                ModelState.AddModelError("", $"{nationalParkobj.Name} cannot be saved");
-                return StatusCode(500, ModelState);
-            }
-
-            return NoContent();
-
-        }
-
-        
        
-        [HttpDelete("{nationalParkId:int}", Name = "DeeleteNationalPark")]
-        public IActionResult DeeleteNationalPark(int nationalParkId)
-        {
-            if (!_nationalRepository.NationalParkExist(nationalParkId))
-            {
-                return NotFound();
-            }
-
-            var nationalparkObj = _nationalRepository.GetNationalPark(nationalParkId);
-            if (!_nationalRepository.DeleteNationalPark(nationalparkObj))
-            {
-                ModelState.AddModelError("","something went wrong");
-                return StatusCode(500, ModelState);
-            }
-
-            return NoContent();
-
-         }
-
 
     }
 
